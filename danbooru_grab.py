@@ -22,12 +22,12 @@ my_blacklist = []
 #my_blacklist = ['tattoo']
 
 # Higher priority: custom filter [Set to EMPTY if not needed] Absolute condition
-#my_abs_filters = []
-my_abs_filters = ['1girl', 'furry_female']
+my_abs_filters = []
+#my_abs_filters = ['1girl', 'furry_female']
 
 # custom filter [Set to EMPTY if not needed] Any condition
-#my_any_filters = []
-my_any_filters = ['blue_hair', 'white_hair']
+my_any_filters = []
+#my_any_filters = ['blue_hair', 'white_hair']
 
 # retrie times for any reason http request failed
 retrie_times = 5
@@ -89,7 +89,9 @@ def SearchDownload():
                     print("Bypass Black List")
                     print(tags)
                 elif True is all(x in tags for x in my_abs_filters):
-                    if True is any(x in tags for x in my_any_filters):
+                    if 0 == len(my_any_filters):
+                        SingleDownload(original_img)                          
+                    elif True is any(x in tags for x in my_any_filters):
                         SingleDownload(original_img)                        
                     else:
                         print("Bypass Any")
