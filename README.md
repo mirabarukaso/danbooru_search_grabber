@@ -32,4 +32,4 @@ All filters can be left empty.
 | --- | --- | --- | --- |
 |`my_blacklist`| Hightest | Any | The image will be ignored if `ANY tag in this list` appear in image tags. |
 |`my_abs_filters`| High | Absolute | After the previous condition is satisfied, if the image tags does `NOT match all terms in this list`, the image is ignored. |
-|`my_blacklist`| Normal | Any | After the previous condition is satisfied, the image will be `downloaded` if the image tags is a `match for one or more` of the conditions in this list. |
+|`my_any_filters`| Normal | Any | After the previous condition is satisfied, the image will be `downloaded` if the image tags is a `match for one or more` of the conditions in this list. |
