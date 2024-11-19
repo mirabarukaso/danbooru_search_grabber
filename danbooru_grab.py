@@ -11,10 +11,10 @@ base_url = 'https://danbooru.donmai.us/posts?page=[REPLACE_PAGE_INDEX]&tags=[REP
 save_patch = 'f:\\danbooru_grabbing\\'
 
 # my_tags for SearchDownload tags [Change to what you want]
-my_tags = 'cat_girl+furry'
+my_tags = 'furry+fox_girl'
 
 # page limit
-start_page = 1
+start_page = 13
 end_page = 1001
 
 # HIGHEST priority: blacklist [Set to EMPTY if not needed] Any condition
@@ -140,7 +140,12 @@ def SingleDownload(url):
         #print(tags)
         tags_replaced = str(tags).replace(' ', ',')
         print(tags_replaced)
-        tags_save = os.path.join(save_patch, str(img_filename).split('.')[0]+'.txt')
+        tag_filename_all = str(img_filename).split('.')        
+        tag_filename_all[len(tag_filename_all) - 1] = 'txt'
+        tag_filename = tag_filename_all[0]
+        for index in range(1, len(tag_filename_all)):
+            tag_filename = tag_filename + '.' + tag_filename_all[index]
+        tags_save = os.path.join(save_patch, tag_filename)
         with open(tags_save, 'wb') as saveFile:
             saveFile.write(bytes(tags_replaced, 'utf-8'))
             
