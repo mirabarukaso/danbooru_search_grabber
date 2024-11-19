@@ -11,24 +11,61 @@ base_url = 'https://danbooru.donmai.us/posts?page=[REPLACE_PAGE_INDEX]&tags=[REP
 save_patch = 'f:\\danbooru_grabbing\\'
 
 # my_tags for SearchDownload tags [Change to what you want]
-my_tags = 'furry+veemon'
+my_tags = 'cat_girl+furry'
 
 # page limit
 start_page = 1
 end_page = 1001
 
+# HIGHEST priority: blacklist [Set to EMPTY if not needed] Any condition
+my_blacklist = []
+#my_blacklist = ['tattoo']
+
+# Higher priority: custom filter [Set to EMPTY if not needed] Absolute condition
+#my_abs_filters = []
+my_abs_filters = ['1girl', 'furry_female']
+
+# custom filter [Set to EMPTY if not needed] Any condition
+#my_any_filters = []
+my_any_filters = ['blue_hair', 'white_hair']
+
+# retrie times for any reason http request failed
+retrie_times = 5
+
+def RequestWithRetires(url, rt_times):
+    # Sleep for 3 second so we don't DDOS Danbooru too much
+    time.sleep(3)  
+        
+    req = None
+    retries = 1
+    success = False
+    while not success and retries < rt_times:
+        try:
+            req = requests.get(url)    
+            req.encoding = req.apparent_encoding
+            success = True
+        except Exception as e:
+            print(e)
+            print('Retire [' + str(retries) + '/' + str(retrie_times) + '] in 5 seconds')
+            time.sleep(5)  
+            retries += 1
+            
+    return (success, req)
+
 def SearchDownload():
     # Loop through start_page to end_page
     for page in range(start_page, end_page):
-        url = base_url.replace('[REPLACE_PAGE_INDEX]', str(page)).replace('[REPLACE_TAGS]', my_tags)
+        url = base_url.replace('[REPLACE_PAGE_INDEX]', str(page)).replace('[REPLACE_TAGS]', my_tags)        
+        print ('Loading search page' + url)
         
-        print ('********\nloading ' + url)
         # Fetch url
-        req = requests.get(url)    
-        req.encoding = req.apparent_encoding
+        success, req = RequestWithRetires(url, retrie_times)        
+        if False == success:
+            print('*** Loading Failed!!!')
+            return
         
-        # 200
-        if req.status_code == 200:
+        # 200 Http Success
+        if 200 == req.status_code:
             data = BeautifulSoup(req.text,"html.parser")
                     
             # Break the loop if the data is empty (no more tags to fetch)
@@ -40,19 +77,25 @@ def SearchDownload():
             items = data.find_all("article")                
             count = 1
             for item in items:            
-                #tags = item.find("img").get("title")
+                tags = item.find("img").get("title")
                 src = item.find("a").get("href")
                 original_img = 'https://danbooru.donmai.us' + str(src)
-                print('====== ' + str(count))      
+                print('====== ' + str(count) + ' @ page ' + str(page) + '/' + str(end_page))      
                 #print(item)  
                 #print(src)
                 #print(original_img)
                 #print(tags)
-                SingleDownload(original_img)
-                count = count + 1
-                
-                # Sleep for 1 second so we don't DDOS Danbooru too much
-                time.sleep(1)                    
+                if True is any(x in tags for x in my_blacklist):
+                    print("Bypass Black List")
+                    print(tags)
+                elif True is all(x in tags for x in my_abs_filters):
+                    if True is any(x in tags for x in my_any_filters):
+                        SingleDownload(original_img)                        
+                    else:
+                        print("Bypass Any")
+                else:
+                    print("Bypass Abs")
+                count = count + 1                                  
             
             # Break the loop if the items is empty (no more tags to fetch)
             if 1 == count:
@@ -64,14 +107,15 @@ def SingleDownload(url):
         print("Unknown url -> ", url)
         return
 
-    print("Loading -> ", url)
-    
+    print("Loading single page-> ", url)
+        
     # Fetch url
-    req = requests.get(url)    
-    req.encoding = req.apparent_encoding
+    success, req = RequestWithRetires(url, retrie_times)
+    if False == success:
+        print('*** Page open Failed!!!')
     
-    # 200
-    if req.status_code == 200:
+    # 200 Http Success
+    if 200 == req.status_code:
         data = BeautifulSoup(req.text,"html.parser")    
     #print(data)
     
@@ -81,21 +125,26 @@ def SingleDownload(url):
     #print(img_url)    
     #print(img_filename)    
     
-    img_requests = requests.get(img_url)
-    img_save = os.path.join(save_patch, img_filename)
-    with open(img_save, 'wb') as saveFile:
-        saveFile.write(img_requests.content)    
+    success, img_req = RequestWithRetires(img_url, retrie_times)
+    if False == success:
+        print('*** Image Download Failed!!!')
+    elif 200 == img_req.status_code:
+        img_save = os.path.join(save_patch, img_filename)
+        with open(img_save, 'wb') as saveFile:
+            saveFile.write(img_req.content)    
     
-    items = data.find_all("section", class_='image-container note-container')
-    tags = items[0].get('data-tags')
-    #print(tags)
-    tags_replaced = str(tags).replace(' ', ',')
-    print(tags_replaced)
-    tags_save = os.path.join(save_patch, img_filename+'.txt')
-    with open(tags_save, 'wb') as saveFile:
-        saveFile.write(bytes(tags_replaced, 'utf-8'))
-        
-    print('Image and Tags saved!')
+        items = data.find_all("section", class_='image-container note-container')
+        tags = items[0].get('data-tags')
+        #print(tags)
+        tags_replaced = str(tags).replace(' ', ',')
+        print(tags_replaced)
+        tags_save = os.path.join(save_patch, str(img_filename).split('.')[0]+'.txt')
+        with open(tags_save, 'wb') as saveFile:
+            saveFile.write(bytes(tags_replaced, 'utf-8'))
+            
+        print('Image and Tags saved!')    
+    else:
+        print('*** Image Download Failed with Http code ' + str(img_req.status_code))
 
 def main(): 
     argc = len(sys.argv)
@@ -104,7 +153,7 @@ def main():
     elif 2 == argc:
         SingleDownload(sys.argv[1])
     else:
-        print ('unknown argc: ', argc)
+        print('unknown args: ')
         for v in sys.argv:
             print (v)
 
