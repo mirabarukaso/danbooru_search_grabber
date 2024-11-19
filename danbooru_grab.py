@@ -11,10 +11,11 @@ base_url = 'https://danbooru.donmai.us/posts?page=[REPLACE_PAGE_INDEX]&tags=[REP
 save_patch = 'f:\\danbooru_grabbing\\'
 
 # my_tags for SearchDownload tags [Change to what you want]
+# only 2 tags
 my_tags = 'furry+fox_girl'
 
 # page limit
-start_page = 13
+start_page = 1
 end_page = 1001
 
 # HIGHEST priority: blacklist [Set to EMPTY if not needed] Any condition
@@ -56,7 +57,7 @@ def SearchDownload():
     # Loop through start_page to end_page
     for page in range(start_page, end_page):
         url = base_url.replace('[REPLACE_PAGE_INDEX]', str(page)).replace('[REPLACE_TAGS]', my_tags)        
-        print ('Loading search page' + url)
+        print ('Loading search page ' + url)
         
         # Fetch url
         success, req = RequestWithRetires(url, retrie_times)        
@@ -103,6 +104,8 @@ def SearchDownload():
             if 1 == count:
                 print(f'No more data found at page {page}. Stopping.', flush=True)
                 break
+        else:
+            print('http response ' + str(req.status_code))
 
 def SingleDownload(url):
     if str(url).__contains__('danbooru.donmai.us') is False:
