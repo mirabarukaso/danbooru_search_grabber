@@ -12,14 +12,14 @@ save_patch = 'f:\\e621_grabbing\\'
 
 # my_tags for SearchDownload tags [Change to what you want]
 # seems e621 supports more than 2 tags
-my_tags = 'fox_girl'
+my_tags = 'feline+female+solo+blue_hair'
 
 # page limit
 start_page = 1
 end_page = 20
 
 # HIGHEST priority: blacklist [Set to EMPTY if not needed] Any condition
-my_blacklist = ['']
+my_blacklist = []
 #my_blacklist = ['tattoo']
 
 # Higher priority: custom filter [Set to EMPTY if not needed] Absolute condition
